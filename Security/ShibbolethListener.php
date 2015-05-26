@@ -25,6 +25,7 @@
 namespace KULeuven\ShibbolethBundle\Security;
 
 use KULeuven\ShibbolethBundle\Service\Shibboleth;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Core\SecurityContextInterface;
 use Symfony\Component\Security\Core\Authentication\AuthenticationManagerInterface;
 use Symfony\Component\HttpKernel\Log\LoggerInterface;
@@ -112,9 +113,8 @@ class ShibbolethListener implements ListenerInterface {
                 $this->logger->info(sprintf('Shibboleth authentication request failed for user "%s": %s', $username, $e->getMessage()));
             }
 
-            if ($this->authenticationEntryPoint) {
-                return $event->setResponse($this->authenticationEntryPoint->start($request, $e));
-            }
+            $request->attributes->set(Security::AUTHENTICATION_ERROR, $e);
+            $request->getSession()->set(Security::AUTHENTICATION_ERROR, $e);
         }       
     }
 }
