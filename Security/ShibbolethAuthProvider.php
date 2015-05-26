@@ -64,6 +64,8 @@ class ShibbolethAuthProvider implements AuthenticationProviderInterface {
 		try {
 			$user = $this->retrieveUser($token);
 
+			if ($user instanceof UserInterface)
+				$this->userChecker->checkPreAuth($user);
 			$this->checkAuthentication($user, $token);
 			if ($user instanceof UserInterface)
 				$this->userChecker->checkPostAuth($user);
