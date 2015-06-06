@@ -36,6 +36,7 @@ use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Http\Event\InteractiveLoginEvent;
+use Symfony\Component\Security\Http\HttpUtils;
 use Symfony\Component\Security\Http\SecurityEvents;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -43,20 +44,24 @@ class ShibbolethListener implements ListenerInterface {
 
     private $securityContext;
     private $authenticationManager;
+    private $checkPath;
     private $providerKey;
     private $authenticationEntryPoint;
     private $logger;
     private $ignoreFailure;
     private $dispatcher;
     private $shibboleth;
+    private $httpUtils;
     
-    public function __construct(SecurityContextInterface $securityContext, AuthenticationManagerInterface $authenticationManager, Shibboleth $shibboleth, $providerKey = null, AuthenticationEntryPointInterface $authenticationEntryPoint = null, LoggerInterface $logger = null, EventDispatcherInterface $dispatcher = null) {
+    public function __construct(SecurityContextInterface $securityContext, AuthenticationManagerInterface $authenticationManager, Shibboleth $shibboleth, $checkPath, HttpUtils $httpUtils, $providerKey = null, AuthenticationEntryPointInterface $authenticationEntryPoint = null, LoggerInterface $logger = null, EventDispatcherInterface $dispatcher = null) {
         if (empty($providerKey)) {
             throw new \InvalidArgumentException('$providerKey must not be empty.');
         }
 
         $this->securityContext = $securityContext;
         $this->authenticationManager = $authenticationManager;
+        $this->checkPath = $checkPath;
+        $this->httpUtils = $httpUtils;
         $this->providerKey = $providerKey;
         $this->authenticationEntryPoint = $authenticationEntryPoint;
         $this->logger = $logger;
@@ -69,7 +74,7 @@ class ShibbolethListener implements ListenerInterface {
 
         $request = $event->getRequest();
 
-        if (!$this->shibboleth->isAuthenticated($request)) { return; }
+        if (!$this->requiresAuthentication($request)) { return; }
         
         if (null !== $this->logger) {
             $this->logger->debug(sprintf('Checking security context token: %s', $this->securityContext->getToken()));
@@ -116,5 +121,10 @@ class ShibbolethListener implements ListenerInterface {
             $request->attributes->set(Security::AUTHENTICATION_ERROR, $e);
             $request->getSession()->set(Security::AUTHENTICATION_ERROR, $e);
         }       
+    }
+
+    protected function requiresAuthentication(Request $request)
+    {
+        return $this->shibboleth->isAuthenticated($request)&&$this->httpUtils->checkRequestPath($request, $this->checkPath);
     }
 }

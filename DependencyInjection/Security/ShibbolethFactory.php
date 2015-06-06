@@ -66,6 +66,7 @@ class ShibbolethFactory implements SecurityFactoryInterface {
             ->children()
                 ->scalarNode('provider')->end()
                 ->booleanNode('use_shibboleth_entry_point')->defaultValue(true)->end()
+                ->scalarNode('check_path')->defaultValue('/login_check')->end()
                 ->end()
         ;
     }
@@ -101,8 +102,9 @@ class ShibbolethFactory implements SecurityFactoryInterface {
     {    
         $listenerId = 'security.authentication.listener.shibboleth';
         $listener = new DefinitionDecorator($listenerId);
-        $listener->replaceArgument(3, $id);
-        if ($entryPoint) $listener->replaceArgument(4, new Reference($entryPoint));
+        $listener->replaceArgument(3, $config['check_path']);
+        $listener->replaceArgument(5, $id);
+        if ($entryPoint) $listener->replaceArgument(6, new Reference($entryPoint));
 
         $listenerId .= '.'.$id;
         $container->setDefinition($listenerId, $listener);
