@@ -24,32 +24,19 @@
  */
 namespace KULeuven\ShibbolethBundle\DependencyInjection\Security;
 
-use Symfony\Component\HttpKernel\Log\LoggerInterface;
-
-use Symfony\Bundle\SecurityBundle\DependencyInjection\Security\Factory\SecurityFactoryInterface;
-use Symfony\Component\Config\Definition\Builder\NodeDefinition;
+use Symfony\Bundle\SecurityBundle\DependencyInjection\Security\Factory\AbstractFactory;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Reference;
-use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\DefinitionDecorator;
+use Symfony\Component\DependencyInjection\Reference;
 
-class ShibbolethFactory implements SecurityFactoryInterface {
-    
- 
-    public function create(ContainerBuilder $container, $id, $config, $userProviderId, $defaultEntryPoint)
+class ShibbolethFactory extends AbstractFactory
+{
+
+    public function __construct()
     {
-        // Auth provider
-        $providerId = $this->createAuthProvider($container, $id, $config, $userProviderId);
-        
-        // entry point
-        $entryPointId = $this->createEntryPoint($container, $id, $config, $defaultEntryPoint);
-
-        // Listener
-        $listenerId = $this->createListener($container, $id, $config, $userProviderId, $entryPointId);
-        
-        return array($providerId, $listenerId, $entryPointId);
+        $this->addOption('use_shibboleth_entry_point', true);
     }
-        
+
     public function getKey()
     {
         return 'shibboleth';
@@ -59,57 +46,46 @@ class ShibbolethFactory implements SecurityFactoryInterface {
     {
         return 'pre_auth';
     }
-    
-    public function addConfiguration(NodeDefinition $node)
-    {
-        $node
-            ->children()
-                ->scalarNode('provider')->end()
-                ->booleanNode('use_shibboleth_entry_point')->defaultValue(true)->end()
-                ->scalarNode('check_path')->defaultValue('/login_check')->end()
-                ->end()
-        ;
-    }
-    
-    protected function createEntryPoint(ContainerBuilder $container, $id, $config, $defaultEntryPoint)
-    {
-        if (null !== $defaultEntryPoint) {
-            return $defaultEntryPoint;
-        }
-        if ($config['use_shibboleth_entry_point']) {
-            $entryPointId = 'security.authentication.entry_point.shibboleth.'.$id;
-            $container
-                ->setDefinition($entryPointId, new DefinitionDecorator('security.authentication.entry_point.shibboleth'))
-            ;
-        } else {
-            $entryPointId = null;
-        }
-        return $entryPointId;
-    }
-    
+
+    /**
+     * Subclasses must return the id of a service which implements the
+     * AuthenticationProviderInterface.
+     *
+     * @param ContainerBuilder $container
+     * @param string           $id             The unique id of the firewall
+     * @param array            $config         The options array for this listener
+     * @param string           $userProviderId The id of the user provider
+     *
+     * @return string never null, the id of the authentication provider
+     */
     protected function createAuthProvider(ContainerBuilder $container, $id, $config, $userProviderId)
     {
         $providerId = 'security.authentication.provider.shibboleth.'.$id;
         $container
             ->setDefinition($providerId, new DefinitionDecorator('security.authentication.provider.shibboleth'))
             ->replaceArgument(0, new Reference($userProviderId))
-        //    ->replaceArgument(2, $id)
+            //    ->replaceArgument(2, $id)
         ;
         return $providerId;
     }
 
-    protected function createListener(ContainerBuilder $container, $id, $config, $userProvider,$entryPoint)
-    {    
-        $listenerId = 'security.authentication.listener.shibboleth';
-        $listener = new DefinitionDecorator($listenerId);
-        $listener->replaceArgument(3, $config['check_path']);
-        $listener->replaceArgument(5, $id);
-        if ($entryPoint) $listener->replaceArgument(6, new Reference($entryPoint));
-
-        $listenerId .= '.'.$id;
-        $container->setDefinition($listenerId, $listener);
-        
-        return $listenerId;
+    /**
+     * Subclasses must return the id of the listener template.
+     *
+     * Listener definitions should inherit from the AbstractAuthenticationListener
+     * like this:
+     *
+     *    <service id="my.listener.id"
+     *             class="My\Concrete\Classname"
+     *             parent="security.authentication.listener.abstract"
+     *             abstract="true" />
+     *
+     * In the above case, this method would return "my.listener.id".
+     *
+     * @return string
+     */
+    protected function getListenerId()
+    {
+        return 'security.authentication.listener.shibboleth';
     }
-
 }
