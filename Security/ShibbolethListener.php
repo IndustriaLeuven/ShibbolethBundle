@@ -118,6 +118,9 @@ class ShibbolethListener implements ListenerInterface {
 
             $request->attributes->set(Security::AUTHENTICATION_ERROR, $e);
             $request->getSession()->set(Security::AUTHENTICATION_ERROR, $e);
+            if ($this->authenticationEntryPoint) {
+                $event->setResponse($this->authenticationEntryPoint->start($request, $e));
+            }
         }       
     }
 
