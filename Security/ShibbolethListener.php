@@ -92,7 +92,7 @@ class ShibbolethListener implements ListenerInterface {
         }
         try {
             $attributes = $this->shibboleth->getAttributes($request);
-            $this->logger->debug(sprintf('Shibboleth returned attributes from: %s', @$attributes['identityProvider'][0]));
+            $this->logger->debug(sprintf('Shibboleth returned attributes from: %s', @$attributes['identityProvider']));
             $token = $this->authenticationManager->authenticate(new ShibbolethUserToken($username, $attributes));
             
             if (null !== $this->logger) $this->logger->debug(sprintf('ShibbolethListener: received token: %s', $token));
@@ -107,8 +107,6 @@ class ShibbolethListener implements ListenerInterface {
                     $loginEvent = new InteractiveLoginEvent($request, $token);
                     $this->dispatcher->dispatch(SecurityEvents::INTERACTIVE_LOGIN, $loginEvent);
                 }
-            } else if ($token instanceof Response) {
-                $event->setResponse($token);
             }
 
         } catch (AuthenticationException $e) {

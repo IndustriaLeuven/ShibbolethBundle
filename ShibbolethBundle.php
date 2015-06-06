@@ -24,6 +24,7 @@
  */
 namespace KULeuven\ShibbolethBundle;
 
+use Symfony\Bundle\SecurityBundle\DependencyInjection\SecurityExtension;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use KULeuven\ShibbolethBundle\DependencyInjection\Security\ShibbolethFactory;
@@ -35,6 +36,7 @@ class ShibbolethBundle extends Bundle
         parent::build($container);
     
         $extension = $container->getExtension('security');
+        /* @var $extension SecurityExtension */
         $extension->addSecurityListenerFactory(new ShibbolethFactory());
-    }    
+    }
 }

@@ -71,7 +71,7 @@ class ShibbolethFactory implements SecurityFactoryInterface {
         ;
     }
     
-    protected function createEntryPoint($container, $id, $config, $defaultEntryPoint)
+    protected function createEntryPoint(ContainerBuilder $container, $id, $config, $defaultEntryPoint)
     {
         if (null !== $defaultEntryPoint) {
             return $defaultEntryPoint;
@@ -98,7 +98,7 @@ class ShibbolethFactory implements SecurityFactoryInterface {
         return $providerId;
     }
 
-    protected function createListener($container, $id, $config, $userProvider,$entryPoint)
+    protected function createListener(ContainerBuilder $container, $id, $config, $userProvider,$entryPoint)
     {    
         $listenerId = 'security.authentication.listener.shibboleth';
         $listener = new DefinitionDecorator($listenerId);
