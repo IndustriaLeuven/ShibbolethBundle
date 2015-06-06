@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 
-<container xmlns="http://symfony.com/schema/dic/services"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<container xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns="http://symfony.com/schema/dic/services"
     xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <parameters>
@@ -33,21 +33,9 @@
         </service>
 
         <service id="security.authentication.listener.shibboleth"
-            class="KULeuven\ShibbolethBundle\Security\ShibbolethListener" public="false">
+                 class="KULeuven\ShibbolethBundle\Security\ShibbolethListener" public="false"
+                 parent="security.authentication.listener.abstract" abstract="true">
             <tag name="monolog.logger" channel="security" />
-            <argument type="service" id="security.context"/>
-            <argument type="service" id="security.authentication.manager" />
-            <argument type="service" id="shibboleth" />
-            <argument /> <!-- Check path -->
-            <argument type="service" id="security.http_utils" />
-            <argument /> <!-- Provider-shared Key -->
-            <argument type="service" id="security.authentication.entry_point" on-invalid="null" />
-            <argument type="service" id="logger" on-invalid="null" />
-            <argument type="service" id="event_dispatcher" on-invalid="null"/>
-        </service>
-
-        <service id="security.authentication.entry_point.shibboleth"
-            class="KULeuven\ShibbolethBundle\Security\ShibbolethAuthenticationEntryPoint" public="false" >
             <argument type="service" id="shibboleth" />
         </service>
 
@@ -55,6 +43,5 @@
             class="KULeuven\ShibbolethBundle\Security\ShibbolethLogoutHandler" public="false" >
             <argument type="service" id="shibboleth" />
         </service>
-
     </services>
 </container>
